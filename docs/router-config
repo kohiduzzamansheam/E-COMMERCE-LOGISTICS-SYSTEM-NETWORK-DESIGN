@@ -1,0 +1,83 @@
+# Router Configurations
+
+CLI configuration excerpts as entered in Packet Tracer for the MOH and WHC routers, covering interface addressing, RIPv2, and static route redistribution. (Extend this file with CSC/DDU/DPU/RPP configs directly from your `.pkt` file if you want the full set documented — Packet Tracer's `show running-config` on each device will give you the exact text.)
+
+## MOH Router
+
+```
+Router(config)#hostname MOH
+MOH(config)#interface g0/0
+MOH(config-if)#ip address 41.41.0.1 255.255.255.0
+MOH(config-if)#no shutdown
+MOH(config-if)#exit
+
+MOH(config)#interface s0/3/0
+MOH(config-if)#ip address 41.41.5.1 255.255.255.252
+MOH(config-if)#no shutdown
+MOH(config-if)#exit
+
+MOH(config)#interface g0/1
+MOH(config-if)#ip address 41.41.5.17 255.255.255.252
+MOH(config-if)#no shutdown
+MOH(config-if)#exit
+
+MOH(config)#interface s0/3/0
+MOH(config-if)#clock rate 64000
+MOH(config-if)#exit
+
+MOH(config)#router rip
+MOH(config-router)#version 2
+MOH(config-router)#no auto-summary
+MOH(config-router)#network 41.0.0.0
+MOH(config-router)#exit
+```
+
+### Static route + redistribution (MOH)
+
+A static route was required to reach the DDU network, then redistributed into RIP so the rest of the RIP domain learns the path:
+
+```
+MOH(config)#ip route 41.41.3.0 255.255.255.0 41.41.5.2
+MOH(config)#router rip
+MOH(config-router)#redistribute static
+MOH(config-router)#exit
+MOH(config)#end
+MOH#write memory
+```
+
+## WHC Router
+
+```
+Router(config)#hostname WHC
+WHC(config)#interface g0/0
+WHC(config-if)#ip address 41.41.1.1 255.255.255.0
+WHC(config-if)#no shutdown
+WHC(config-if)#interface s0/3/0
+WHC(config-if)#ip address 41.41.5.2 255.255.255.252
+WHC(config-if)#no shutdown
+WHC(config-if)#exit
+
+WHC(config)#interface s0/3/1
+WHC(config-if)#exit
+
+WHC(config)#router rip
+WHC(config-router)#version 2
+WHC(config-router)#no auto-summary
+WHC(config-router)#network 41.0.0.0
+WHC(config-router)#exit
+```
+
+## Notes on the routing design
+
+- **RIPv2** was chosen over RIPv1 specifically because it supports **classless routing** (carries subnet mask info in updates), which is required here since the network uses **VLSM** — RIPv1 would break on the mixed `/24`, `/25`, `/26`, and `/30` masks in this design.
+- **`no auto-summary`** is critical: without it, RIP would summarize `41.41.x.0/24` routes back to the classful `41.0.0.0/8` boundary at area borders, which would break routing between the differently-sized VLSM subnets.
+- The **static route on MOH** (`41.41.3.0/24 via 41.41.5.2`) plus `redistribute static` shows a common real-world pattern: using a static route to patch a path RIP couldn't converge on cleanly, then injecting it back into the dynamic routing domain so other routers still learn it automatically.
+- The **WHC S0/2/0 → CSC (backup)** and **CSC S0/3/1 → WHC (backup)** interfaces on `41.41.5.20/30`–`41.41.5.22` form the redundant path — if the primary MOH↔CSC backbone segment fails, RIP recalculates and traffic can still reach CSC via WHC.
+
+## Full configs for CSC / DDU / DPU / RPP
+
+The addressing table in [`ip-addressing-table.md`](ip-addressing-table.md) gives you every interface IP/mask/gateway needed to reproduce these. To pull the exact `show running-config` text for each remaining router:
+
+1. Open `project01_01.pkt` in Packet Tracer.
+2. Click each router → **CLI** tab.
+3. Run `show running-config` and paste the output here, following the same format as MOH/WHC above.
