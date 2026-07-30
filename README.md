@@ -77,8 +77,8 @@ Validated in Packet Tracer using:
 .
 ├── README.md                       # This file
 ├── project01_01.pkt                # Cisco Packet Tracer topology file (open with Packet Tracer)
-├── assets/
-│   └── vlsm-diagram.png            # VLSM subnetting tree diagram
+├── vlsm-diagram.png                # VLSM subnetting tree diagram
+│           
 ├── docs/
 │   ├── vlsm-subnetting.md          # Full VLSM breakdown & subnetting math
 │   ├── ip-addressing-table.md      # Every interface/device IP, mask, gateway
