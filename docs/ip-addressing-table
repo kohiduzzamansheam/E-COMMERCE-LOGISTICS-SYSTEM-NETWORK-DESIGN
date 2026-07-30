@@ -43,4 +43,3 @@ Full device/interface addressing plan for the network, as configured in Packet T
 | RPP PC1 | 41.41.4.130 | 255.255.255.192 | 41.41.4.129 |
 | RPP PC2 | 41.41.4.131 | 255.255.255.192 | 41.41.4.129 |
 
-> **Note:** DDU PC1/PC2 are listed against the `/25` DPU mask (`255.255.255.128`) per the original design documentation — double check this against your live Packet Tracer file, since DDU's own LAN was allocated as `41.41.3.0/24` in the VLSM plan. This is worth confirming/fixing if you present this project, as it's a minor inconsistency between the addressing table and the subnetting diagram.
