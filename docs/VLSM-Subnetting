@@ -1,0 +1,57 @@
+# VLSM Subnetting Breakdown
+
+**Base allocation:** `41.41.0.0/16` (65,536 addresses)
+
+The design follows a top-down VLSM approach: the largest, most stable requirements (site LANs) are carved out first as `/24`s, then progressively smaller requirements (nested sub-sites, then point-to-point WAN links) are carved out of the remaining space, right-sized to how many hosts each segment actually needs.
+
+## Step 1 — Site LANs (carved from `41.41.0.0/16` as `/24`s)
+
+| Subnet | CIDR | Usable Hosts | Assigned To |
+|---|---|---|---|
+| `41.41.0.0/24` | /24 | 254 | **MOH** LAN |
+| `41.41.1.0/24` | /24 | 254 | **WHC** LAN |
+| `41.41.2.0/24` | /24 | 254 | **CSC** LAN |
+| `41.41.3.0/24` | /24 | 254 | **DDU** LAN |
+| `41.41.4.0/24` | /24 | 254 | Reserved for **DPU/RPP** (subnetted further, see Step 2) |
+| `41.41.5.0/24` | /24 | 254 | Reserved for **WAN backbone** (subnetted further, see Step 3) |
+
+## Step 2 — DPU / RPP nested sub-sites (carved from `41.41.4.0/24`)
+
+The DPU site needed a smaller LAN, and within it, a further sub-site (RPP) needed an even smaller LAN — a classic VLSM "subnet-within-a-subnet" scenario.
+
+```
+41.41.4.0/24
+├── 41.41.4.0/25    → DPU LAN (126 usable hosts)
+└── 41.41.4.128/25  → further split:
+    ├── 41.41.4.128/26 → RPP LAN (62 usable hosts)
+    └── 41.41.4.192/26 → reserved / unused
+```
+
+| Subnet | CIDR | Mask | Usable Hosts | Assigned To |
+|---|---|---|---|---|
+| `41.41.4.0/25` | /25 | `255.255.255.128` | 126 | **DPU** LAN |
+| `41.41.4.128/26` | /26 | `255.255.255.192` | 62 | **RPP** LAN |
+| `41.41.4.192/26` | /26 | `255.255.255.192` | 62 | Reserved (unused) |
+
+## Step 3 — WAN point-to-point links (carved from `41.41.5.0/24` as `/30`s)
+
+Point-to-point serial links only need 2 usable host addresses, so each is subnetted down to a `/30` (4 addresses total, 2 usable). This is the classic VLSM efficiency win: instead of burning a full `/24` (254 usable) on a link that only ever needs 2 addresses, six `/30`s fit inside a single `/24` with room to spare.
+
+| Subnet | CIDR | Mask | Usable Hosts | Link |
+|---|---|---|---|---|
+| `41.41.5.0/30` | /30 | `255.255.255.252` | 2 | MOH ↔ WHC |
+| `41.41.5.4/30` | /30 | `255.255.255.252` | 2 | WHC ↔ DDU |
+| `41.41.5.8/30` | /30 | `255.255.255.252` | 2 | DDU ↔ RPP |
+| `41.41.5.12/30` | /30 | `255.255.255.252` | 2 | CSC ↔ DPU |
+| `41.41.5.16/30` | /30 | `255.255.255.252` | 2 | MOH ↔ CSC (shared backbone) |
+| `41.41.5.20/30` | /30 | `255.255.255.252` | 2 | WHC ↔ CSC (backup link) |
+
+`41.41.5.24/30` through `41.41.5.252/30` remain unused/reserved for future WAN expansion.
+
+## Why VLSM (instead of one fixed mask everywhere)
+
+A single fixed subnet mask across the whole `/16` would either:
+- waste hundreds of addresses on 2-host WAN links if a large mask like `/24` were used everywhere, or
+- fail to provide enough addresses for site LANs if a small mask like `/30` were used everywhere.
+
+VLSM lets each segment use exactly the mask it needs — `/24` for LANs with ~250 hosts, `/25`/`/26` for smaller nested LANs, and `/30` for WAN links — which is why the addressing tree branches to different prefix lengths at different points in the diagram above.
