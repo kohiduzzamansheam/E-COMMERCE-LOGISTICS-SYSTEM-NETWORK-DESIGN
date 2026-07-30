@@ -1,0 +1,46 @@
+# IP Addressing Table
+
+Full device/interface addressing plan for the network, as configured in Packet Tracer.
+
+## Router Interfaces
+
+| Device | Interface | IPv4 Address | Subnet Mask | Purpose / Default Gateway |
+|---|---|---|---|---|
+| **MOH Router** | G0/0 | 41.41.0.1 | 255.255.255.0 | MOH LAN Gateway |
+| | S0/3/0 | 41.41.5.1 | 255.255.255.252 | WAN to WHC |
+| | G0/1 | 41.41.5.17 | 255.255.255.252 | Shared Backbone Switch |
+| **WHC Router** | G0/0 | 41.41.1.1 | 255.255.255.0 | WHC LAN Gateway |
+| | S0/3/0 | 41.41.5.2 | 255.255.255.252 | WAN to MOH |
+| | S0/3/1 | 41.41.5.5 | 255.255.255.252 | To DDU |
+| | S0/2/0 | 41.41.5.21 | 255.255.255.252 | Backup to CSC |
+| **CSC Router** | G0/0 | 41.41.2.1 | 255.255.255.0 | CSC LAN |
+| | G0/1 | 41.41.5.18 | 255.255.255.252 | To MOH (Backbone) |
+| | S0/3/0 | 41.41.5.13 | 255.255.255.252 | To DPU |
+| | S0/3/1 | 41.41.5.22 | 255.255.255.252 | Backup from WHC |
+| **DDU Router** | G0/0 | 41.41.3.1 | 255.255.255.0 | DDU LAN |
+| | S0/3/0 | 41.41.5.6 | 255.255.255.252 | To WHC |
+| | S0/3/1 | 41.41.5.9 | 255.255.255.252 | To RPP |
+| **DPU Router** | G0/0 | 41.41.4.1 | 255.255.255.128 | DPU LAN |
+| | S0/3/0 | 41.41.5.14 | 255.255.255.252 | To CSC |
+| **RPP Router** | G0/0 | 41.41.4.129 | 255.255.255.192 | RPP LAN |
+| | S0/3/0 | 41.41.5.10 | 255.255.255.252 | To DDU |
+
+## Servers & End Devices
+
+| Device | IPv4 Address | Subnet Mask | Default Gateway |
+|---|---|---|---|
+| DNS Server | 41.41.0.10 | 255.255.255.0 | 41.41.0.1 |
+| Email Server | 41.41.0.11 | 255.255.255.0 | 41.41.0.1 |
+| MOH PC1 | 41.41.0.100 | 255.255.255.0 | 41.41.0.1 |
+| MOH PC2 | 41.41.0.101 | 255.255.255.0 | 41.41.0.1 |
+| WHC PC1 | 41.41.1.100 | 255.255.255.0 | 41.41.1.1 |
+| WHC PC2 | 41.41.1.101 | 255.255.255.0 | 41.41.1.1 |
+| CSC Web Server | 41.41.2.10 | 255.255.255.0 | 41.41.2.1 |
+| CSC Email Server | 41.41.2.11 | 255.255.255.0 | 41.41.2.1 |
+| CSC DHCP Server | 41.41.2.12 | 255.255.255.0 | 41.41.2.1 |
+| DDU PC1 | 41.41.4.10 | 255.255.255.128 | 41.41.4.1 |
+| DDU PC2 | 41.41.4.11 | 255.255.255.128 | 41.41.4.1 |
+| RPP PC1 | 41.41.4.130 | 255.255.255.192 | 41.41.4.129 |
+| RPP PC2 | 41.41.4.131 | 255.255.255.192 | 41.41.4.129 |
+
+> **Note:** DDU PC1/PC2 are listed against the `/25` DPU mask (`255.255.255.128`) per the original design documentation — double check this against your live Packet Tracer file, since DDU's own LAN was allocated as `41.41.3.0/24` in the VLSM plan. This is worth confirming/fixing if you present this project, as it's a minor inconsistency between the addressing table and the subnetting diagram.
